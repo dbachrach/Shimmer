@@ -10,10 +10,19 @@
 #import "FBShimmeringView.h"
 
 #import "FBShimmeringLayer.h"
+#import <KVOController/FBKVOController.h>
 
 #if !__has_feature(objc_arc)
 #error This file must be compiled with ARC. Convert your project to ARC or specify the -fobjc-arc flag.
 #endif
+
+
+@interface FBShimmeringView ()
+
+@property (nonatomic) BOOL shouldShimmer;
+
+@end
+
 
 @implementation FBShimmeringView
 
@@ -38,7 +47,40 @@
   LAYER_ACCESSOR (accessor, ctype) \
   LAYER_MUTATOR (mutator, ctype)
 
-LAYER_RW_PROPERTY(isShimmering, setShimmering:, BOOL)
+- (BOOL)shimmering {
+    return ((FBShimmeringLayer *)self.layer).shimmering;
+}
+
+- (void)setShimmering:(BOOL)shimmering {
+    self.shouldShimmer = shimmering;
+    [((FBShimmeringLayer *)self.layer) setShimmering:shimmering];
+    
+    if (shimmering) {
+        if (self.scrollingDelegate) {
+            __weak typeof(self) weakSelf = self;
+            [self.KVOController observe:self.scrollingDelegate
+                                keyPath:@"scrolling"
+                                options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
+                                  block:^(id observer, id object, NSDictionary *change) {
+                                      const BOOL scrolling = weakSelf.scrollingDelegate.scrolling;
+                                      if (scrolling) {
+                                          [((FBShimmeringLayer *)self.layer) setShimmering:NO];
+                                      }
+                                      else {
+                                          if (weakSelf.shouldShimmer) {
+                                              [((FBShimmeringLayer *)self.layer) setShimmering:YES];
+                                          }
+                                      }
+                                  }];
+        }
+    }
+    else {
+        if (self.scrollingDelegate) {
+            [self.KVOController unobserve:self.scrollingDelegate];
+        }
+    }
+}
+
 LAYER_RW_PROPERTY(shimmeringPauseDuration, setShimmeringPauseDuration:, CFTimeInterval)
 LAYER_RW_PROPERTY(shimmeringAnimationOpacity, setShimmeringAnimationOpacity:, CGFloat)
 LAYER_RW_PROPERTY(shimmeringOpacity, setShimmeringOpacity:, CGFloat)
