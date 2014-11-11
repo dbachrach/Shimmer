@@ -58,6 +58,7 @@
     if (shimmering) {
         if (self.scrollingDelegate) {
             __weak typeof(self) weakSelf = self;
+            [self.KVOController unobserve:self.scrollingDelegate];
             [self.KVOController observe:self.scrollingDelegate
                                 keyPath:@"scrolling"
                                 options:NSKeyValueObservingOptionInitial | NSKeyValueObservingOptionNew
