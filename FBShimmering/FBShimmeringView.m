@@ -11,6 +11,7 @@
 
 #import "FBShimmeringLayer.h"
 #import <KVOController/FBKVOController.h>
+#import <KVOController/NSObject+FBKVOController.h>
 
 #if !__has_feature(objc_arc)
 #error This file must be compiled with ARC. Convert your project to ARC or specify the -fobjc-arc flag.
